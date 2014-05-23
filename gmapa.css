@@ -1,0 +1,12 @@
+#field-mapa-values tr td{
+}
+#field-mapa-values .form-item{
+	float: left;
+	clear: both;
+}
+.mapa_canvas{
+	float: right;
+	height: 300px;
+	
+	width: 100%;
+}

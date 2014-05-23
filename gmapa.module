@@ -1,0 +1,273 @@
+<?php
+/**
+ * @file
+ * An example field using the Field Types API.
+ */
+
+/**
+ * @defgroup gmapa Example: Field Types API
+ * @ingroup examples
+ * @{
+ * Examples using Field Types API.
+ *
+ * This is updated from Barry Jaspan's presentation at Drupalcon Paris,
+ * @link http://acquia.com/community/resources/acquia-tv/intro-field-api-module-developers Video Presentation @endlink
+ *
+ * Providing a field requires:
+ * - Defining a field:
+ *   - hook_field_info()
+ *   - hook_field_schema()
+ *   - hook_field_validate()
+ *   - hook_field_is_empty()
+ *
+ * - Defining a formatter for the field (the portion that outputs the field for
+ *   display):
+ *   - hook_field_formatter_info()
+ *   - hook_field_formatter_view()
+ *
+ * - Defining a widget for the edit form:
+ *   - hook_field_widget_info()
+ *   - hook_field_widget_form()
+ *
+ * Our module defines the field in gmapa_field_info(),
+ * gmapa_field_validate() and gmapa_field_is_empty().
+ * gmapa_field_schema() is implemented in gmapa.install.
+ *
+ * Our module sets up a formatter in gmapa_field_formatter_info() and
+ * gmapa_field_formatter_view(). These are the API hooks that present
+ * formatted and themed output to the user.
+
+ * And finally, our module defines the widet in
+ * gmapa_field_widget_info() and gmapa_field_widget_form().
+ * The widget is the form element used to receive input from the user
+ * when the field is being populated.
+ *
+ * @see field_types
+ * @see field
+ */
+
+/***************************************************************
+ * Field Type API hooks
+ ***************************************************************/
+
+/**
+ * Implements hook_field_info().
+ *
+ * Provides the description of the field.
+ */
+function gmapa_field_info() {
+  return array(
+    // We name our field as the associative name of the array.
+    'gmapa_pos' => array(
+      'label' => t('Google mapas'),
+      'description' => t('Campo para inserção de mapa do google.'),
+      'default_widget' => 'gmapa_field',
+      'default_formatter' => 'gmapa_simple_text',
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_validate().
+ *
+ * This hook gives us a chance to validate content that's in our
+ * field. We're really only interested in the $items parameter, since
+ * it holds arrays representing content in the field we've defined.
+ * We want to verify that the items only contain RGB hex values like
+ * this: #RRGGBB. If the item validates, we do nothing. If it doesn't
+ * validate, we add our own error notification to the $errors parameter.
+ *
+ * @see gmapa_field_widget_error()
+ */
+function gmapa_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
+  // foreach ($items as $delta => $item) {
+  //   if (!empty($item['rgb'])) {
+  //     if (! preg_match('@^#[0-9a-f]{6}$@', $item['rgb'])) {
+  //       $errors[$field['field_name']][$langcode][$delta][] = array(
+  //         'error' => 'gmapa_invalid',
+  //         'message' => t('Color must be in the HTML format #abcdef.'),
+  //       );
+  //     }
+  //   }
+  // }
+}
+
+
+/**
+ * Implements hook_field_is_empty().
+ *
+ * hook_field_is_emtpy() is where Drupal asks us if this field is empty.
+ * Return TRUE if it does not contain data, FALSE if it does. This lets
+ * the form API flag an error when required fields are empty.
+ */
+function gmapa_field_is_empty($item, $field) {
+  if(empty($item['longitude']) && empty($item['latitude']) && empty($item['zoom']))
+    return true;
+  else
+    return false;
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ *
+ * We need to tell Drupal that we have two different types of formatters
+ * for this field. One will change the text color, and the other will
+ * change the background color.
+ *
+ * @see gmapa_field_formatter_view()
+ */
+function gmapa_field_formatter_info() {
+  return array(
+    // This formatter just displays the hex value in the color indicated.
+    'gmapa_simple_text' => array(
+      'label' => t('Simple text-based formatter'),
+      'field types' => array('gmapa_pos'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ *
+ * Two formatters are implemented.
+ * - gmapa_simple_text just outputs markup indicating the color that
+ *   was entered and uses an inline style to set the text color to that value.
+ * - gmapa_color_background does the same but also changes the
+ *   background color of div.region-content.
+ *
+ * @see gmapa_field_formatter_info()
+ */
+function gmapa_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+
+  switch ($display['type']) {
+    // This formatter simply outputs the field as text and with a color.
+    case 'gmapa_simple_text':
+      foreach ($items as $delta => $item) {
+        // $element[$delta] = array(
+        //   // We create a render array to produce the desired markup,
+        //   // "<p style="color: #hexcolor">The color code ... #hexcolor</p>".
+        //   // See theme_html_tag().
+        //   '#type' => 'html_tag',
+        //   '#tag' => 'p',
+        //   '#attributes' => array(
+        //     'style' => 'color: ' . $item['rgb'],
+        //   ),
+        //   '#value' => t('The color code in this field is @code', array('@code' => $item['rgb'])),
+        // );
+      }
+      break;
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_field_widget_info().
+ *
+ * Three widgets are provided.
+ * - A simple text-only widget where the user enters the '#ffffff'.
+ * - A 3-textfield widget that gathers the red, green, and blue values
+ *   separately.
+ * - A farbtastic colorpicker widget that chooses the value graphically.
+ *
+ * These widget types will eventually show up in hook_field_widget_form,
+ * where we will have to flesh them out.
+ *
+ * @see gmapa_field_widget_form()
+ */
+function gmapa_field_widget_info() {
+  return array(
+    'gmapa_field' => array(
+       'label' => t('Mapa do Google Maps'),
+       'field types' => array('gmapa_pos'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_widget_form().
+ *
+ * hook_widget_form() is where Drupal tells us to create form elements for
+ * our field's widget.
+ *
+ * We provide one of three different forms, depending on the widget type of
+ * the Form API item provided.
+ *
+ * The 'gmapa_colorpicker' and 'gmapa_text' are essentially
+ * the same, but gmapa_colorpicker adds a javascript colorpicker
+ * helper.
+ *
+ * gmapa_field displays three text fields, one each for red, green,
+ * and blue. However, the field type defines a single text column,
+ * rgb, which needs an HTML color spec. Define an element validate
+ * handler that converts our r, g, and b fields into a simulated single
+ * 'rgb' form element.
+ */
+function gmapa_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  $fieldNames = array(
+      'longitude' => 'Longitude',
+      'latitude' => 'Latitude',
+      'zoom' => 'Zoom'
+  );
+  
+  switch ($instance['widget']['type']) {
+    case 'gmapa_field':
+      drupal_add_js(drupal_get_path('module', 'gmapa') . '/gmapa.js','file');
+      drupal_add_css(drupal_get_path('module', 'gmapa') . '/gmapa.css','file');
+      foreach ($fieldNames as $name => $title) {
+        $value = isset($items[$delta][$name]) ? $items[$delta][$name] : '';
+        $widget = array();
+        $widget['#delta'] = $delta;
+        $widget += array(
+          '#type' => 'textfield',
+          // '#suffix' => '<div class="editar"><input type="radio" name="editar" value="' . $delta . '"/><label for="">Editar</label></div>',
+          '#title'=>$title,
+          '#default_value' => $value,
+          '#size' => 10,
+          '#maxlength' => 100,
+        );
+        // pre($widget);
+        $element[$name] = $widget;
+      }
+    break;
+  }
+  $element['mapa'] = array(
+    '#type'=> 'markup',
+    '#markup'=>'<div class="editar"><input type="radio" name="editarmapa" class="editarMapa" value="' . $delta . '"/><label for="">Editar</label></div>'
+    );
+  return $element;
+}
+
+/**
+ * Implements hook_field_widget_error().
+ *
+ * hook_field_widget_error() lets us figure out what to do with errors
+ * we might have generated in hook_field_validate(). Generally, we'll just
+ * call form_error().
+ *
+ * @see gmapa_field_validate()
+ * @see form_error()
+ */
+function gmapa_field_widget_error($element, $error, $form, &$form_state) {
+  switch ($error['error']) {
+    case 'gmapa_invalid':
+      form_error($element, $error['message']);
+      break;
+  }
+}
+function gmapa_field_validate_field($element, &$form_state) {
+  $delta = $element['#delta']; // TODO: Isn't there a better way to find out which element?
+  $field = $form_state['field'][$element['#field_name']][$element['#language']]['field'];
+  $field_name = $field['field_name'];
+  if (isset($form_state['values'][$field_name][$element['#language']][$delta]['mapa'])) {
+      $values = $form_state['values'][$field_name][$element['#language']][$delta]['mapa'];
+      $value = json_encode($values);
+      form_set_value($element, $value, $form_state);
+  }
+}
+function pre($var){
+  print "<pre>";
+  print_r($var);
+  print "</pre>";
+}
