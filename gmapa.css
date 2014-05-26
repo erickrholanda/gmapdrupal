@@ -1,12 +1,29 @@
-#field-mapa-values tr td{
+.field-type-gmapa-pos{
+	width: 100%;
+	position: relative;
+	min-height: 490px;
 }
-#field-mapa-values .form-item{
+.field-type-gmapa-pos .editar,
+.field-type-gmapa-pos .form-item.form-type-textfield{
+	width: 15%;
 	float: left;
-	clear: both;
+
+}
+.field-type-gmapa-pos .editar label{
+	
+}
+.field-type-gmapa-pos .editar input{
+	text-align: center;
+}
+#mapaWrapper{
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+#mapaWrapper{
+	width: 40%;
 }
 .mapa_canvas{
-	float: right;
-	height: 300px;
-	
+	height: 450px;
 	width: 100%;
 }

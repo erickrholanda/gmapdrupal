@@ -1,44 +1,43 @@
 (function ($) {
-
-
   Drupal.behaviors.gmapa_field = {
     attach: function(context) {
-      if(jQuery(context).context === undefined && jQuery(context).attr('id') == 'article-node-form' && 'google' in window ){
-        tabela = jQuery('#edit-field-mapa .field-multiple-table tbody');
-        initMapa(tabela);
+      if('mapa' in window){
+        atualizarEdicao();
       }
     }
   }
 }) (jQuery);
 // window.mapa = Array();
-var initMapa = function(tabela) {
-  if(tabela == undefined){
-    tabela = jQuery('#edit-field-mapa .field-multiple-table tbody');
-  }
-  var trMapa = jQuery('<tr id="mapaWrapper" />'),
-    tdMapa = jQuery('<td colspan="3" />'),
-    mapaCanvas = jQuery('<div id="mapa_canvas" class="mapa_canvas" />');
+var initMapa = function() {
+  var mapaWrapper = jQuery('#mapaWrapper');
+  if(mapaWrapper.length === 0){
+    
+      wrapper = jQuery('.field-type-gmapa-pos');
+    
+    mapaWrapper = jQuery('<div id="mapaWrapper" />');
+    var mapaCanvas = jQuery('<div id="mapa_canvas" class="mapa_canvas" />');
 
-  tdMapa.append(mapaCanvas);
-  trMapa.append(tdMapa);
-  tabela.append(trMapa);
+    mapaWrapper.append(mapaCanvas);
+    wrapper.append(mapaWrapper);
 
     _mapa = jQuery('#mapa_canvas');
+    _mapaWrapper = jQuery('#mapaWrapper');
     inputEditar = jQuery("input.editarMapa");
     _valor = inputEditar.filter(':first').trigger('click').val();
-      var map = {
-        id: _valor,
-        mapa: _mapa,
-        lat: jQuery('#edit-field-mapa-und-' + _valor + '-longitude'),
-        lgt: jQuery('#edit-field-mapa-und-' + _valor + '-latitude'),
-        zoom: jQuery('#edit-field-mapa-und-' + _valor + '-zoom'),
-        config: { 
-          lat: -13.579376258290615, 
-          lon: -52.873377799987736
+    var map = {
+      id: _valor,
+      mapa: _mapa,
+      wrapper: _mapaWrapper,
+      lat: jQuery('.latitude-' +_valor),
+      lgt: jQuery('.longitude-' + _valor),
+      zoom: jQuery('.zoom-' + _valor),
+      config: { 
+        lat: -13.579376258290615, 
+        lon: -52.873377799987736
 
-        },
-        mapaDiv: _mapa.get(0)
-      };
+      },
+      mapaDiv: _mapa.get(0)
+    };
         
     if(map.lat.val() != '' || map.lgt.val() != ''){
           map.config.lat = map.lat.val();
@@ -53,7 +52,7 @@ var initMapa = function(tabela) {
       },
       mapTypeControl:false,
       streetViewControl: false
-    };
+    };  
     if(map.zoom.val() == ''){
       mapOptions.zoom = 3;
     }
@@ -80,59 +79,66 @@ var initMapa = function(tabela) {
     google.maps.event.addListener(map.mapa, 'zoom_changed', function() {
       var zoom = map.mapa.getZoom();
       map.zoom.val(zoom);
+    });
+      
+    google.maps.event.addListener(map.marker, 'mouseup', function() {
       window.setTimeout(function() {
           map.mapa.panTo(map.marker.getPosition());
-      }, 1000);
-
-      });
-      
-      google.maps.event.addListener(map.marker, 'mouseup', function() {
-          window.setTimeout(function() {
-              map.mapa.panTo(map.marker.getPosition());
-          }, 700);
+      }, 700);
     });
     
     google.maps.event.addListener(map.mapa, 'dblclick', function(event) {
-          if(map.marker === undefined){
-              map.marker = new google.maps.Marker(f);
-          }
-          map.marker.setPosition(event.latLng);
-          window.setTimeout(function() {
-              map.mapa.panTo(map.marker.getPosition());
-          }, 1000);
-          map.lat.get(0).value = map.marker.position.lat();
-          map.lgt.get(0).value = map.marker.position.lng();
+      if(map.marker === undefined){
+          map.marker = new google.maps.Marker(f);
+      }
+      map.marker.setPosition(event.latLng);
+      window.setTimeout(function() {
+          map.mapa.panTo(map.marker.getPosition());
+      }, 500);
+      map.lat.get(0).value = map.marker.position.lat();
+      map.lgt.get(0).value = map.marker.position.lng();
     });
     
-    window.mapa = map;    
-    // inputEditar = jQuery("input.editarMapa");
-    inputEditar.click(function(){
-      if('mapa' in window){
-        console.log(window.mapa);
-        _valor = this.value;
-        window.mapa.lat   = jQuery('#edit-field-mapa-und-' + _valor + '-longitude');
-        window.mapa.lgt   = jQuery('#edit-field-mapa-und-' + _valor + '-latitude');
-        window.mapa.zoom  = jQuery('#edit-field-mapa-und-' + _valor + '-zoom');
-        if(window.mapa.lat.val() != '' || window.mapa.lgt.val() != ''){
-          window.mapa.config.lat = window.mapa.lat.val();
-          window.mapa.config.lon = window.mapa.lgt.val();
-        }
-        else{
-          window.mapa.config.lat = -13.579376258290615;
-          window.mapa.config.lon = -52.873377799987736;
-        }
-        var latLng = new google.maps.LatLng(window.mapa.config.lat,window.mapa.config.lon);
+    window.mapa = map;
+  }
+  atualizarEdicao();
+}
+function atualizarEdicao(){
+  var inputEditar = jQuery("input.editarMapa"),
+    $formitem = inputEditar.filter(':first').parent('.editar');
+    $formParent = $formitem.closest('.field-type-gmapa-pos'),
+    _top = parseInt($formitem.offset().top),
+    _topField = parseInt($formParent.offset().top),
+    outerHeight =  $formParent.outerHeight();
+    if('mapa' in window){
+      window.mapa.wrapper.animate({top:_top-(_topField+8)},200);
+    }
+  inputEditar.click(function(){
+    if('mapa' in window){
+      var _valor = this.value;
+      window.mapa.lat   = jQuery('.latitude-' + _valor);
+      window.mapa.lgt   = jQuery('.longitude-' +_valor);
+      window.mapa.zoom  = jQuery('.zoom-' + _valor);
 
-          window.mapa.marker.setPosition(latLng);
-          window.setTimeout(function() {
-              window.mapa.mapa.panTo(window.mapa.marker.getPosition());
-          }, 1000);
-          // window.mapa.lat.get(0).value = window.mapa.marker.position.lat();
-          // window.mapa.lgt.get(0).value = window.mapa.marker.position.lng();
-          // var zoom = map.mapa.getZoom();
-          // map.zoom.val(zoom);
+      if(window.mapa.lat.val() != '' || window.mapa.lgt.val() != ''){
+        window.mapa.config.lat = window.mapa.lat.val();
+        window.mapa.config.lon = window.mapa.lgt.val();
+        window.mapa.config.zoom = parseInt(window.mapa.zoom.val());
       }
-    });
+      else{
+        window.mapa.config.lat = -13.579376258290615;
+        window.mapa.config.lon = -52.873377799987736;
+        window.mapa.config.zoom = 3;
+      }
+      var latLng = new google.maps.LatLng(window.mapa.config.lat,window.mapa.config.lon);
+      window.mapa.marker.setPosition(latLng);
+      window.mapa.mapa.setZoom(window.mapa.config.zoom);
+      window.mapa.mapa.panTo(window.mapa.marker.getPosition());
+      // _top = parseInt(jQuery(this).offset().top);
+
+      // window.mapa.wrapper.animate({top:_top-(_topField+28)},200);
+    }
+  });
 }
 function loadScriptMapa() {
   if(window.scriptMapa === undefined){

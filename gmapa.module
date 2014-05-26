@@ -143,20 +143,32 @@ function gmapa_field_formatter_view($entity_type, $entity, $field, $instance, $l
   switch ($display['type']) {
     // This formatter simply outputs the field as text and with a color.
     case 'gmapa_simple_text':
+    drupal_add_js(drupal_get_path('module', 'gmapa') . '/gmapa-field.js','file');
+    drupal_add_css(drupal_get_path('module', 'gmapa') . '/gmapa-field.css','file');
       foreach ($items as $delta => $item) {
-        // $element[$delta] = array(
+        $element[$delta] = array(
         //   // We create a render array to produce the desired markup,
         //   // "<p style="color: #hexcolor">The color code ... #hexcolor</p>".
         //   // See theme_html_tag().
-        //   '#type' => 'html_tag',
-        //   '#tag' => 'p',
-        //   '#attributes' => array(
-        //     'style' => 'color: ' . $item['rgb'],
-        //   ),
-        //   '#value' => t('The color code in this field is @code', array('@code' => $item['rgb'])),
-        // );
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#attributes'=>array(
+            'data-latitude' => $item['latitude'],
+            'data-longitude'=> $item['longitude'],
+            'data-zoom'     => $item['zoom'],
+            'class'         => array('gmapa'),
+            ),
+          '#value' => t('latitude: @latitude , longitude: @longitude e zoom: @zoom', array(
+            '@longitude' => $item['longitude'],
+            '@latitude' => $item['latitude'],
+            '@zoom' => $item['zoom']
+            )),
+        );
       }
       break;
+      // 'longitude' => 'Longitude',
+      // 'latitude' => 'Latitude',
+      // 'zoom' => 'Zoom'
   }
 
   return $element;
@@ -225,6 +237,9 @@ function gmapa_field_widget_form(&$form, &$form_state, $field, $instance, $langc
           '#title'=>$title,
           '#default_value' => $value,
           '#size' => 10,
+          '#attributes'=>array(
+            'class'=>array($name . '-' . $delta)
+            ),
           '#maxlength' => 100,
         );
         // pre($widget);
@@ -234,7 +249,7 @@ function gmapa_field_widget_form(&$form, &$form_state, $field, $instance, $langc
   }
   $element['mapa'] = array(
     '#type'=> 'markup',
-    '#markup'=>'<div class="editar"><input type="radio" name="editarmapa" class="editarMapa" value="' . $delta . '"/><label for="">Editar</label></div>'
+    '#markup'=>'<div class="editar"><label for="">Editar</label><input type="radio" name="editarmapa" class="editarMapa" value="' . $delta . '"/></div>'
     );
   return $element;
 }
