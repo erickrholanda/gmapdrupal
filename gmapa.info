@@ -1,11 +1,12 @@
-name = Mapa
-description = An implementation of a field to show the Field API
+name = Sirius Google Map
+description = Modulo para insercao de mapas com a API v3 do Google maps
 package = sirius
 core = 7.x
 
 ; Information added by Drupal.org packaging script on 2014-01-31
-version = "7.x-1"
+version = "7.1"
 core = "7.x"
-project = "sirius"
-datestamp = "1391195015"
+project = "sirius_custom"
+package = Sirius
+datestamp = "1401125163949"
 

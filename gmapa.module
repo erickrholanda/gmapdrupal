@@ -143,8 +143,8 @@ function gmapa_field_formatter_view($entity_type, $entity, $field, $instance, $l
   switch ($display['type']) {
     // This formatter simply outputs the field as text and with a color.
     case 'gmapa_simple_text':
-    drupal_add_js(drupal_get_path('module', 'gmapa') . '/gmapa-field.js','file');
-    drupal_add_css(drupal_get_path('module', 'gmapa') . '/gmapa-field.css','file');
+//    drupal_add_js(drupal_get_path('module', 'gmapa') . '/gmapa-field.js','file');
+//    drupal_add_css(drupal_get_path('module', 'gmapa') . '/gmapa-field.css','file');
       foreach ($items as $delta => $item) {
         $element[$delta] = array(
         //   // We create a render array to produce the desired markup,
@@ -280,9 +280,4 @@ function gmapa_field_validate_field($element, &$form_state) {
       $value = json_encode($values);
       form_set_value($element, $value, $form_state);
   }
-}
-function pre($var){
-  print "<pre>";
-  print_r($var);
-  print "</pre>";
 }
